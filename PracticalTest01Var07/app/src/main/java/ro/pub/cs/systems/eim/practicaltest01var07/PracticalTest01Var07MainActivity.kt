@@ -1,6 +1,10 @@
 package ro.pub.cs.systems.eim.practicaltest01var07
 
+import android.content.BroadcastReceiver
+import android.content.Context
 import android.content.Intent
+import android.content.IntentFilter
+import android.os.Build
 import android.os.Bundle
 import android.util.Log
 import android.widget.Button
@@ -24,17 +28,43 @@ class PracticalTest01Var07MainActivity : AppCompatActivity() {
     private var sum: Int = 0
     private var prod: Int = 0
 
-    private val activityResultLauncher = registerForActivityResult(ActivityResultContracts.StartActivityForResult()) { result ->
-        if (result.resultCode == RESULT_OK) {
-            if (result.data?.getIntExtra("sum", 0) != null)
-                sum = result.data?.getIntExtra("sum", 0)!!
-            Toast.makeText(this, "Sum " + sum, Toast.LENGTH_SHORT).show()
-        } else if (result.resultCode == RESULT_CANCELED) {
-            if (result.data?.getIntExtra("prod", 0) != null)
-                prod = result.data?.getIntExtra("prod", 0)!!
-            Toast.makeText(this, "Prod " + result.data?.getIntExtra("prod", 0), Toast.LENGTH_SHORT).show()
+    private val messageBroadcastReceiver = object : BroadcastReceiver() {
+        override fun onReceive(context: Context?, intent: Intent?) {
+            var nr1 = intent?.getIntExtra("nr1", 0)
+            var nr2 = intent?.getIntExtra("nr2", 0)
+            var nr3 = intent?.getIntExtra("nr3", 0)
+            var nr4 = intent?.getIntExtra("nr4", 0)
+
+            topLeftText.setText(nr1.toString())
+            topRightText.setText(nr2.toString())
+            bottomRightText.setText(nr3.toString())
+            bottomLeftText.setText(nr4.toString())
+
+            Log.i("randomGen", "S-au generat random")
         }
     }
+
+    private val intentFilter = IntentFilter().apply {
+        addAction("ro.pub.cs.systems.eim.action")
+    }
+
+
+    private val activityResultLauncher =
+        registerForActivityResult(ActivityResultContracts.StartActivityForResult()) { result ->
+            if (result.resultCode == RESULT_OK) {
+                if (result.data?.getIntExtra("sum", 0) != null)
+                    sum = result.data?.getIntExtra("sum", 0)!!
+                Toast.makeText(this, "Sum " + sum, Toast.LENGTH_SHORT).show()
+            } else if (result.resultCode == RESULT_CANCELED) {
+                if (result.data?.getIntExtra("prod", 0) != null)
+                    prod = result.data?.getIntExtra("prod", 0)!!
+                Toast.makeText(
+                    this,
+                    "Prod " + result.data?.getIntExtra("prod", 0),
+                    Toast.LENGTH_SHORT
+                ).show()
+            }
+        }
 
 
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -61,6 +91,10 @@ class PracticalTest01Var07MainActivity : AppCompatActivity() {
         Toast.makeText(this, "Prod " + prod, Toast.LENGTH_SHORT).show()
         Log.i("verificare", "Sum " + sum)
         Log.i("verificare", "Prod " + prod)
+
+
+        val intent = Intent(this, PracticalTest01Var07Service::class.java)
+        startService(intent)
     }
 
     fun getObj() {
@@ -99,5 +133,25 @@ class PracticalTest01Var07MainActivity : AppCompatActivity() {
         super.onSaveInstanceState(outState)
         outState.putInt("sum", sum)
         outState.putInt("prod", prod)
+    }
+
+    override fun onDestroy() {
+        super.onDestroy()
+        val intent = Intent(this, PracticalTest01Var07Service::class.java)
+        stopService(intent)
+    }
+
+    override fun onResume() {
+        super.onResume()
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
+            registerReceiver(messageBroadcastReceiver, intentFilter, RECEIVER_EXPORTED)
+        } else {
+            registerReceiver(messageBroadcastReceiver, intentFilter)
+        }
+    }
+
+    override fun onPause() {
+        unregisterReceiver(messageBroadcastReceiver)
+        super.onPause()
     }
 }
