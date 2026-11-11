@@ -21,12 +21,18 @@ class PracticalTest01Var07MainActivity : AppCompatActivity() {
     private lateinit var bottomLeftText: EditText
     private lateinit var bottomRightText: EditText
 
+    private var sum: Int = 0
+    private var prod: Int = 0
 
     private val activityResultLauncher = registerForActivityResult(ActivityResultContracts.StartActivityForResult()) { result ->
         if (result.resultCode == RESULT_OK) {
-            Toast.makeText(this, "Sum " + result.data?.getIntExtra("sum", 0), Toast.LENGTH_LONG).show()
+            if (result.data?.getIntExtra("sum", 0) != null)
+                sum = result.data?.getIntExtra("sum", 0)!!
+            Toast.makeText(this, "Sum " + sum, Toast.LENGTH_SHORT).show()
         } else if (result.resultCode == RESULT_CANCELED) {
-            Toast.makeText(this, "Prod " + result.data?.getIntExtra("prod", 0), Toast.LENGTH_LONG).show()
+            if (result.data?.getIntExtra("prod", 0) != null)
+                prod = result.data?.getIntExtra("prod", 0)!!
+            Toast.makeText(this, "Prod " + result.data?.getIntExtra("prod", 0), Toast.LENGTH_SHORT).show()
         }
     }
 
@@ -42,6 +48,19 @@ class PracticalTest01Var07MainActivity : AppCompatActivity() {
         }
 
         getObj()
+
+        if (savedInstanceState != null) {
+            if (savedInstanceState.containsKey("sum")) {
+                sum = savedInstanceState.getInt("sum")
+            }
+            if (savedInstanceState.containsKey("prod")) {
+                prod = savedInstanceState.getInt("prod")
+            }
+        }
+        Toast.makeText(this, "Sum " + sum, Toast.LENGTH_SHORT).show()
+        Toast.makeText(this, "Prod " + prod, Toast.LENGTH_SHORT).show()
+        Log.i("verificare", "Sum " + sum)
+        Log.i("verificare", "Prod " + prod)
     }
 
     fun getObj() {
@@ -76,4 +95,9 @@ class PracticalTest01Var07MainActivity : AppCompatActivity() {
         }
     }
 
+    override fun onSaveInstanceState(outState: Bundle) {
+        super.onSaveInstanceState(outState)
+        outState.putInt("sum", sum)
+        outState.putInt("prod", prod)
+    }
 }
